@@ -5,6 +5,8 @@ using std::cin;
 using std::cout;
 using std::endl;
 
+#define delimiter "\n------------------------------------\n"
+
 #define HUMAN_TAKE_PARAMETERS const std::string& last_name, const std::string& first_name, int age
 #define HUMAN_GIVE_PARAMETERS last_name, first_name, age
 
@@ -38,7 +40,7 @@ public:
 	{
 		this->age = age;
 	}
-
+	
 	////////		Constructors:		////////
 	Human(HUMAN_TAKE_PARAMETERS)
 	{
@@ -46,6 +48,7 @@ public:
 		set_first_name(first_name);
 		set_age(age);
 		cout << "HConstructor:\t" << this << endl;
+
 	}
 	~Human()
 	{
@@ -53,11 +56,13 @@ public:
 	}
 
 	////////	       Methods:			////////
-	void print()const
+	virtual void print()const
 	{
 		cout << last_name << " " << first_name << " " << age << endl;
 	}
+	
 };
+
 
 #define STUDENT_TAKE_PARAMETERS const std::string& speciality, const std::string& group, double rating, double attendance
 #define STUDENT_GIVE_PARAMETERS speciality, group, rating, attendance
@@ -104,6 +109,14 @@ public:
 
 	////////	Constructors:		////////
 	Student(HUMAN_TAKE_PARAMETERS, STUDENT_TAKE_PARAMETERS) :Human(HUMAN_GIVE_PARAMETERS)
+	{
+		set_speciality(speciality);
+		set_group(group);
+		set_rating(rating);
+		set_attendance(attendance);
+		cout << "SConstructor:\t" << this << endl;
+	}
+	Student(const Human& human,STUDENT_TAKE_PARAMETERS):Human(human)
 	{
 		set_speciality(speciality);
 		set_group(group);
@@ -168,16 +181,102 @@ public:
 	}
 };
 
+#define GRUDUATE_TAKE_PARAMETERS const std::string& subject
+#define GRUDUATE_GIVE_PARAMETERS subject
+class  Gruduate : public Student
+{
+	std::string subject;
+public:
+	const std::string& get_subject()const
+	{
+		return subject;
+	}
+	void set_subject(const std::string& subject)
+	{
+		this->subject = subject;
+	}
+
+	///   constructor
+
+	Gruduate(HUMAN_TAKE_PARAMETERS, STUDENT_TAKE_PARAMETERS, GRUDUATE_TAKE_PARAMETERS) :
+		Student(HUMAN_GIVE_PARAMETERS, STUDENT_GIVE_PARAMETERS)
+	{
+		this->subject = subject;
+			cout<<"GConstructor: \t" <<this << endl;
+	}
+	Gruduate(const Student& student,const std::string&subject) :Student(student)
+	{
+		set_subject(subject);
+		cout << "GConstructor: \t" << this << endl;
+	}
+	~Gruduate()
+	{
+		cout << "TDestructor: \t" << this << endl;
+	}
+	
+	/// </summary>
+	void print()const
+	{
+		Student::print();
+		cout << subject << endl;
+	}
+
+};
+
+//#define INHERERITANCE_1
+//#define INHERERITANCE_2
+
 void main()
 {
+
 	setlocale(LC_ALL, "");
 	cout << "HelloAcademy" << endl;
+#ifdef INHERERITANCE_1
 	Human human("Richter", "Jeffrey", 40);
 	human.print();
+	cout << delimiter << endl;
 
 	Student student("Pinkman", "Jessie", 20, "Chenistry", "WW_220", 95, 90);
 	student.print();
+	cout << delimiter << endl;
 
 	Teacher teacher("White", "Walter", 50, "Chemistry", 25);
 	teacher.print();
+	cout << delimiter << endl;
+
+	Gruduate graduate("Schrader", "Hank", 40, "Criminalist", "OBN", 50, 70, "How to catch Heisenber");
+	graduate.print();
+	cout << delimiter << endl;
+#endif // INHERERITANCE_1
+
+#ifdef INHERERITANCE_2
+	Human human("Vercety", "Tomy", 30);
+	human.print();
+	cout << delimiter << endl;
+
+	Student student(human, "Theft", "Vice", 95, 98);
+	student.print();
+	cout << delimiter << endl;
+
+	Gruduate graduate(student, "How to catch Heisenber");
+	graduate.print();
+	cout << delimiter << endl;
+#endif // INHERERITANCE_2
+
+
+
+	Human* group[] =
+	{
+		new Student("Pinkman", "Jessie", 20, "Chenistry", "WW_220", 95, 90),
+		new	Teacher("White", "Walter", 50, "Chemistry", 25),
+		new Gruduate ("Schrader", "Hank", 40, "Criminalist", "OBN", 50, 70, "How to catch Heisenber"),
+		new Student("Vercety", "Tomy", 30,"Theft", "Vice",95,98),
+		new	Teacher("Diaz","Ricardo",50,"Weapons distrubution",20)
+
+	};
+	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
+	{
+		group[i]->print();
+		cout << delimiter << endl;
+	}
 }
