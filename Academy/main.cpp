@@ -50,7 +50,7 @@ public:
 		cout << "HConstructor:\t" << this << endl;
 
 	}
-	~Human()
+	virtual ~Human()
 	{
 		cout << "HDestructor:\t" << this << endl;
 	}
@@ -278,5 +278,9 @@ void main()
 	{
 		group[i]->print();
 		cout << delimiter << endl;
+	}
+	for (int i = 0; i < sizeof(group) / sizeof(group[0]); i++)
+	{
+		delete group[i];
 	}
 }
