@@ -1,7 +1,7 @@
 ﻿#include<iostream>
 #include<fstream>
-#include<string>
-#include<string.h>
+#include<string>		//Объявлен класс std::string
+#include<string.h>		//Объявлены функции для работы с NULL Terminated Lines
 
 using std::cin;
 using std::cout;
@@ -65,14 +65,19 @@ public:
 
 	virtual std::ostream& print(std::ostream& os)const
 	{
-		//os << strchr(typeid(*this).name(), ' ') + 1 << ":\t";
+		//os << strchr(typeid(*this).name(), ' ') + 1 << ":\t";	
+			//Оператор typeid(type | value) определяет тип значения на этапе выполнения программы.
+			//Метод name() возвращает C-string содержащую имя типа.
+
 		return os << last_name << " " << first_name << " " << age;
 	}
 	virtual std::ofstream& print(std::ofstream& ofs)const
 	{
-		ofs.width(TYPE_WIDTH);	
-		ofs << std::left;	
-		ofs << std::string(strchr(typeid(*this).name(), ' ') + 1) + ":";
+		ofs.width(TYPE_WIDTH);	//Метод width() задает ширину вывода.
+		ofs << std::left;		//Возвращаем выравнивание по левому краю.
+		ofs << std::string(strchr(typeid(*this).name(), ' ') + 1) + ":";//Оператор typeid(type | value) определяет тип
+																		//значения на этапе выполнения программы.
+																		//Метод name() возвращает C-string содержащую имя типа.
 		ofs.width(LAST_NAME_WIDTH);
 		ofs << last_name;
 		ofs.width(FIRST_NAME_WIDTH);
@@ -80,6 +85,11 @@ public:
 		ofs.width(AGE_WIDTH);
 		ofs << age;
 		return ofs;
+	}
+	virtual std::ifstream& read(std::ifstream& ifs)
+	{
+		ifs >> last_name >> first_name >> age;
+		return ifs;
 	}
 
 };
@@ -91,6 +101,10 @@ std::ostream& operator<<(std::ostream& os, const Human& obj)
 std::ofstream& operator<<(std::ofstream& ofs, const Human& obj)
 {
 	return obj.print(ofs);
+}
+std::ifstream& operator>>(std::ifstream& ifs, Human& obj)
+{
+	return obj.read(ifs);
 }
 
 
@@ -181,6 +195,12 @@ public:
 		ofs << attendance;
 		return ofs;
 	}
+	std::ifstream& read(std::ifstream& ifs)override
+	{
+		Human::read(ifs);
+		ifs >> speciality >> group >> rating >> attendance;
+		return ifs;
+	}
 };
 
 #define TEACHER_TAKE_PARAMETERS const std::string& speciality, int experience
@@ -226,6 +246,26 @@ public:
 	{
 		return Human::print(os) << " " << speciality << " " << experience << " years";
 	}
+	std::ofstream& print(std::ofstream& ofs)const override
+	{
+		Human::print(ofs);
+		ofs.width(SPECIALITY_WIDTH);
+		ofs << speciality;
+		ofs.width(EXPERIENCE_WIDTH);
+		ofs << experience;
+		return ofs;
+	}
+	std::ifstream& read(std::ifstream& ifs)override
+	{
+		Human::read(ifs);
+		char sz_speciality[SPECIALITY_WIDTH + 1]{};	//sz_ - String Zero (Строка, заканчивающаяся нулем)
+		ifs.read(sz_speciality, SPECIALITY_WIDTH);
+		for (int i = SPECIALITY_WIDTH - 2; sz_speciality[i] == ' '; i--)sz_speciality[i] = 0;
+		while (sz_speciality[0] == ' ')for (int i = 0; sz_speciality[i]; i++)sz_speciality[i] = sz_speciality[i + 1];
+		speciality = sz_speciality;
+		ifs >> experience;
+		return ifs;
+	}
 };
 
 #define GRUDUATE_TAKE_PARAMETERS const std::string& subject
@@ -266,11 +306,19 @@ public:
 	{
 		return Student::print(os) << " " << subject;
 	}
+	std::ofstream& print(std::ofstream& ofs)const override
+	{
+		Student::print(ofs) << subject;
+		return ofs;
+	}
 
+	std::ifstream& read(std::ifstream& ifs) override
+	{
+		Student::read(ifs);
+		std::getline(ifs, subject);
+		return ifs;
+	}
 };
-
-//#define INHERERITANCE_1
-//#define INHERERITANCE_2
 
 void Print(Human* group[], const int n)
 {
@@ -278,9 +326,10 @@ void Print(Human* group[], const int n)
 	for (int i = 0; i < n; i++)
 	{
 		//group[i]->print();
-		cout << *group[i] << endl;
+		if (group[i])cout << *group[i] << endl;
 		cout << delimiter << endl;
 	}
+	cout << "Колиество человек в группе: " << n << endl;
 }
 void Save(Human* group[], const int n, const std::string& filename)
 {
@@ -291,7 +340,25 @@ void Save(Human* group[], const int n, const std::string& filename)
 	}
 	fout.close();
 	std::string cmd = "notepad " + filename;
-	system(cmd.c_str());	
+	system(cmd.c_str());//Функция system(const char*) выполняет любую досутпную коданду операционной системы
+						//Метод c_str() возвращает C-string (NULL Terminated Line), обвернутый в объект класса std::string.
+}
+Human* HumanFactory(const std::string& type)
+{
+	Human* human = nullptr;
+	if (type == "Human:")human = new Human("", "", 0);
+	if (type == "Teacher:")human = new Teacher("", "", 0, "", 0);
+	if (type == "Student:")human = new Student("", "", 0, "", "", 0, 0);
+	if (type == "Graduate:")human = new Gruduate("", "", 0, "", "", 0, 0, "");
+	return human;
+}
+bool NotAppropriateType(const std::string& buffer)
+{
+	//Несоответствуюший тип:
+	return buffer.find("Human:") == std::string::npos &&
+		buffer.find("Student:") == std::string::npos &&
+		buffer.find("Teacher:") == std::string::npos &&
+		buffer.find("Graduate:") == std::string::npos;
 }
 Human** Load(const std::string& filename, int& n)
 {
@@ -299,13 +366,13 @@ Human** Load(const std::string& filename, int& n)
 	std::ifstream fin(filename);
 	if (fin.is_open())
 	{
-		//1) ):
+		//1) Bыичсляем размер файла (количество записей в файле):
 		n = 0;
 		while (!fin.eof())
 		{
 			std::string buffer;
-			//fin.getline();	//
-			std::getline(fin, buffer);	//
+			//fin.getline();	//НЕ перегружен для объектов класса std::string
+			std::getline(fin, buffer);	//читает все до конца строки
 			//move DST, SRC;
 			//strcat(DST, SRC);
 			if (
@@ -316,18 +383,18 @@ Human** Load(const std::string& filename, int& n)
 				)continue;
 			n++;
 		}
-		cout << ": " << n << endl;
+		cout << "количество записей в файле: " << n << endl;
 
-		//2) 
+		//2)  Выделяем память для группы:
 		group = new Human * [n] {};
 
-		//3)
-		cout << ": " << fin.tellg() << endl;
+		//3)   Возвращаемся в начало файла, для того чтобы прочитать содержимое этого файла:
+		cout << "Позиция курсора на чтение: " << fin.tellg() << endl;
 		fin.clear();
 		fin.seekg(0);
-		cout << ": " << fin.tellg() << endl;
+		cout << "Позиция курсора на чтение: " << fin.tellg() << endl;
 
-		//4) 
+		//4) Читаем файл:
 		for (int i = 0; !fin.eof(); i++)
 		{
 			std::string type;
@@ -351,6 +418,8 @@ void Clear(Human* group[], const int n)
 	}
 }
 
+//#define INHERERITANCE_1
+//#define INHERERITANCE_2
 //#define SAVE_CHECK
 #define LOAD_CHECK
 
@@ -406,6 +475,10 @@ void main()
 	Clear(group, sizeof(group) / sizeof(group[0]));
 #endif // SAVE_CHECK
 
+#ifdef LOAD_CHECK
 	int n = 0;
 	Human** group = Load("group.txt", n);
+	Print(group, n);
+	Clear(group, n);
+#endif // LOAD_CHECK
 }
